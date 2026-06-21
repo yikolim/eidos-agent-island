@@ -1,0 +1,41 @@
+name: Eidos
+options:
+  bundleIdPrefix: com.eidos
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "15"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    PRODUCT_NAME: Eidos
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    ENABLE_HARDENED_RUNTIME: YES
+
+targets:
+  Eidos:
+    type: application
+    platform: macOS
+    sources:
+      - path: Eidos
+        excludes:
+          - "**/*.md"
+    info:
+      path: Eidos/Info.plist
+      properties:
+        CFBundleName: Eidos
+        CFBundleDisplayName: Eidos
+        CFBundleIdentifier: com.eidos.app
+        CFBundleVersion: "1"
+        CFBundleShortVersionString: "0.1.0"
+        LSUIElement: true
+        NSPrincipalClass: NSApplication
+        CFBundleIconFile: ""
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.eidos.app
+        INFOPLIST_FILE: Eidos/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""
+        COMBINE_HIDPI_IMAGES: YES
