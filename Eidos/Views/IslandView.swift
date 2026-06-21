@@ -13,7 +13,10 @@ struct IslandView: View {
         switch store.islandState {
         case .idle:     return CGSize(width: 108, height: 14)
         case .mini:     return CGSize(width: 266, height: 38)
-        case .cockpit:  return CGSize(width: 400, height: 240)
+        case .cockpit:
+            let rows = max(store.agents.count, 1)
+            let height = CGFloat(15 + 12 + rows * 55 + 8 + 36 + 14)
+            return CGSize(width: 400, height: min(height, 380))
         case .approval: return CGSize(width: 416, height: 298)
         }
     }
