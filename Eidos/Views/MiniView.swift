@@ -21,6 +21,9 @@ struct MiniView: View {
             }
             Spacer(minLength: 24)
             let running = store.agents.filter { $0.status == "running" }.count
+            if running > 0 {
+                BlinkingDot()
+            }
             Text("\(running) running")
                 .font(.system(size: 11))
                 .foregroundStyle(.white.opacity(0.35))

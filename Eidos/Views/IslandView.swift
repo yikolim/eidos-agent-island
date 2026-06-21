@@ -12,11 +12,13 @@ struct IslandView: View {
     private var targetSize: CGSize {
         switch store.islandState {
         case .idle:     return CGSize(width: 108, height: 14)
-        case .mini:     return CGSize(width: 320, height: 38)
+        case .mini:     return CGSize(width: 420, height: 38)
         case .cockpit:
-            let rows = max(store.agents.count, 1)
-            let height = CGFloat(15 + 12 + rows * 55 + 8 + 36 + 14)
-            return CGSize(width: 400, height: min(height, 380))
+            // Measured: header ≈ 48, each agent row ≈ 64, divider ≈ 16,
+            // quick-action bar ≈ 56. Scroll only past ~6 rows.
+            let rows = min(max(store.agents.count, 1), 6)
+            let height = CGFloat(48 + rows * 64 + 16 + 56)
+            return CGSize(width: 400, height: height)
         case .approval: return CGSize(width: 416, height: 298)
         }
     }

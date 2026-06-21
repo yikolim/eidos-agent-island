@@ -15,14 +15,20 @@
 #
 status="${1:-running}"
 task="${2:-}"
+payload="$(cat)"   # hook JSON on stdin (carries session_id, tool_name, …)
+
+# Use a per-session agent id so multiple concurrent Claude Code sessions each
+# show as their own running agent instead of collapsing into one.
+sid="$(printf '%s' "$payload" | /usr/bin/jq -r '.session_id // empty' 2>/dev/null)"
+if [ -n "$sid" ]; then agent="claude-session-${sid:0:8}"; else agent="claude-session-local"; fi
 
 if [ "$task" = "@tool" ]; then
-  tool="$(/usr/bin/jq -r '.tool_name // empty' 2>/dev/null)"
+  tool="$(printf '%s' "$payload" | /usr/bin/jq -r '.tool_name // empty' 2>/dev/null)"
   if [ -n "$tool" ]; then task="Using $tool"; else task="Working"; fi
 fi
 
-body="$(/usr/bin/jq -nc --arg s "$status" --arg t "$task" \
-  '{agent:"claude-code", status:$s} + (if $t == "" then {} else {task:$t} end)')"
+body="$(/usr/bin/jq -nc --arg a "$agent" --arg s "$status" --arg t "$task" \
+  '{agent:$a, status:$s} + (if $t == "" then {} else {task:$t} end)')"
 
 /usr/bin/curl -s -m 1 -X POST "${EIDOS_URL:-http://localhost:7799}/event" \
   -H 'Content-Type: application/json' -d "$body" >/dev/null 2>&1 &

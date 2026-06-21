@@ -65,7 +65,13 @@ class AgentStore {
             islandState = running.isEmpty ? .mini : .cockpit
             return
         }
-        switch running.count {
+        // Count VISUAL groups, not raw agents: all Claude sessions collapse into
+        // one grouped chip (with a count), so N concurrent sessions stay in the
+        // compact pill showing "N running" instead of forcing the cockpit open.
+        let claudeRunning = running.filter { $0.isClaudeAgent }
+        let otherRunning = running.filter { !$0.isClaudeAgent }
+        let groups = (claudeRunning.isEmpty ? 0 : 1) + otherRunning.count
+        switch groups {
         case 0:  islandState = .idle
         case 1:  islandState = .mini
         default: islandState = .cockpit
