@@ -19,13 +19,14 @@ struct MiniView: View {
             ForEach(Array(otherAgents.prefix(2).enumerated()), id: \.offset) { _, agent in
                 agentChip(agent)
             }
-            Spacer()
+            Spacer(minLength: 24)
             let running = store.agents.filter { $0.status == "running" }.count
             Text("\(running) running")
                 .font(.system(size: 11))
                 .foregroundStyle(.white.opacity(0.35))
         }
-        .padding(.horizontal, 14)
+        .padding(.leading, 14)
+        .padding(.trailing, 18)
     }
 
     private var claudeSessionChip: some View {

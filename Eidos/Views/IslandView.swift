@@ -12,7 +12,7 @@ struct IslandView: View {
     private var targetSize: CGSize {
         switch store.islandState {
         case .idle:     return CGSize(width: 108, height: 14)
-        case .mini:     return CGSize(width: 266, height: 38)
+        case .mini:     return CGSize(width: 320, height: 38)
         case .cockpit:
             let rows = max(store.agents.count, 1)
             let height = CGFloat(15 + 12 + rows * 55 + 8 + 36 + 14)
@@ -41,6 +41,7 @@ struct IslandView: View {
         .animation(.spring(response: 0.42, dampingFraction: 0.72), value: store.islandState)
         // Window sizing + centering is handled in IslandWindow (the hosting view
         // resizes the window to fit this frame; the window re-centers on resize).
+        .onHover { hovering in store.isHovered = hovering }   // hover expands the island
         .gesture(dragGesture.modifiers(.command))   // ⌘-drag to move; plain clicks never shift it
         .onTapGesture(count: 2) { islandWindow?.resetAnchor() }
         .onTapGesture { store.cycleState() }

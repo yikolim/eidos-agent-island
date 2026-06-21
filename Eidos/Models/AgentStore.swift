@@ -49,12 +49,22 @@ class AgentStore {
 
     var hasPendingApprovals: Bool { !approvalQueue.isEmpty }
 
+    /// Set while the pointer is over the island — hovering expands it.
+    var isHovered = false {
+        didSet { if oldValue != isHovered { recalcState() } }
+    }
+
     func recalcState() {
         if let next = approvalQueue.first {
             islandState = .approval(next)
             return
         }
         let running = agents.filter { $0.status == "running" || $0.status == "paused" }
+        // Hovering expands the island to reveal more — like the Dynamic Island.
+        if isHovered {
+            islandState = running.isEmpty ? .mini : .cockpit
+            return
+        }
         switch running.count {
         case 0:  islandState = .idle
         case 1:  islandState = .mini

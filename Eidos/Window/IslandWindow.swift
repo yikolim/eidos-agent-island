@@ -20,7 +20,9 @@ class IslandWindow: NSPanel {
             backing: .buffered,
             defer: false
         )
-        level = .statusBar
+        // Above the menu bar (which sits at .statusBar) so the island can hang
+        // from the very top edge / notch without being clipped by it.
+        level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 2)
         backgroundColor = .clear
         isOpaque = false
         hasShadow = false
@@ -76,12 +78,11 @@ class IslandWindow: NSPanel {
         setFrame(NSRect(x: x, y: y, width: width, height: height), display: true, animate: false)
     }
 
-    /// Top-center, hanging from the BOTTOM edge of the menu bar so the whole
-    /// island sits below the notch/sensor area and nothing is clipped — the
-    /// equivalent of Apple's rule that Dynamic Island content flanks the camera
-    /// rather than sitting under it. `visibleFrame.maxY` is just under the menu bar.
+    /// Top-center, flush with the very top edge of the screen so the island
+    /// hangs from the notch like a real Dynamic Island (the window level is
+    /// raised above the menu bar so this isn't clipped).
     private func defaultAnchor(on screen: NSScreen) -> CGPoint {
-        CGPoint(x: screen.frame.midX, y: screen.visibleFrame.maxY)
+        CGPoint(x: screen.frame.midX, y: screen.frame.maxY)
     }
 
     /// Move the panel to a new bottom-left origin while dragging, and remember
