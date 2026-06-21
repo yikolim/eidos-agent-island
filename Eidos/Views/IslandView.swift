@@ -36,15 +36,11 @@ struct IslandView: View {
         }
         .frame(width: targetSize.width, height: targetSize.height)
         .animation(.spring(response: 0.42, dampingFraction: 0.72), value: store.islandState)
+        // Window sizing + centering is handled in IslandWindow (the hosting view
+        // resizes the window to fit this frame; the window re-centers on resize).
         .gesture(dragGesture.modifiers(.command))   // ⌘-drag to move; plain clicks never shift it
         .onTapGesture(count: 2) { islandWindow?.resetAnchor() }
         .onTapGesture { store.cycleState() }
-        .onChange(of: store.islandState) { _, _ in
-            // Resize the window to match the new island size. Approvals always
-            // snap back to the top-center notch so they're never off to a side.
-            let centerIt: Bool = { if case .approval = store.islandState { return true }; return false }()
-            islandWindow?.reposition(width: targetSize.width, height: targetSize.height, centered: centerIt)
-        }
     }
 
     /// Squared top, rounded bottom — so the island looks like it hangs from the
@@ -73,9 +69,13 @@ struct IslandView: View {
                     x: start.x + value.translation.width,
                     y: start.y - value.translation.height
                 )
+                window.dragStartActive = true
                 window.dragTo(origin: origin)
             }
-            .onEnded { _ in dragStartOrigin = nil }
+            .onEnded { _ in
+                dragStartOrigin = nil
+                islandWindow?.dragStartActive = false
+            }
     }
 
     @ViewBuilder

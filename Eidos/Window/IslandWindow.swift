@@ -32,13 +32,37 @@ class IslandWindow: NSPanel {
         hostingView = NSHostingView(rootView: AnyView(view))
         contentView = hostingView
         reposition(width: 266, height: 38)
+
+        // The hosting view auto-resizes the window to fit the SwiftUI content,
+        // but that resize keeps the bottom-left origin — so mini→cockpit grew
+        // rightward off-center. Re-center on every resize to correct it.
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(windowDidResizeNotif),
+            name: NSWindow.didResizeNotification, object: self
+        )
     }
+
+    private var isRepositioning = false
+
+    /// Re-center whenever the hosting view resizes the window (unless the user is
+    /// mid ⌘-drag). Guarded against the resize our own `setFrame` triggers.
+    @objc private func windowDidResizeNotif() {
+        guard !isRepositioning, dragStartActive == false else { return }
+        let centered: Bool = { if case .approval = store.islandState { return true }; return false }()
+        let s = frame.size
+        reposition(width: s.width, height: s.height, centered: centered)
+    }
+
+    /// Set true by the view while a ⌘-drag is in progress so resizes don't fight it.
+    var dragStartActive = false
 
     /// Position the island. When `centered` is true the drag anchor is ignored
     /// and it snaps back to the top-center notch — used for important states
     /// (approvals) that should always be front-and-center.
     func reposition(width: CGFloat, height: CGFloat, centered: Bool = false) {
         guard let screen = NSScreen.main else { return }
+        isRepositioning = true
+        defer { isRepositioning = false }
         let anchor = (centered ? nil : anchorTopCenter) ?? defaultAnchor(on: screen)
 
         var x = anchor.x - width / 2
