@@ -28,12 +28,18 @@ struct AgentStatus: Identifiable {
         return "\(s / 60)m \(s % 60)s"
     }
 
+    var displayName: String {
+        if agentID.hasPrefix("claude-session-") { return "Claude Code" }
+        return agentID.capitalized
+    }
+
+    var isClaudeAgent: Bool {
+        agentID == "claude" || agentID == "claude-code" || agentID.hasPrefix("claude-session-")
+    }
+
     var color: String {
-        switch agentID {
-        case "codex":        return "#7c6fff"
-        case "claude":       return "#cc785c"
-        case "claude-code":  return "#cc785c"
-        default:             return "#4ade80"
-        }
+        if agentID == "codex" { return "#7c6fff" }
+        if isClaudeAgent { return "#cc785c" }
+        return "#4ade80"
     }
 }

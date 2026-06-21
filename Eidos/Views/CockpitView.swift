@@ -27,10 +27,13 @@ struct CockpitView: View {
             .padding(.top, 15)
             .padding(.bottom, 12)
 
-            ForEach(store.agents) { agent in
-                agentRow(agent)
-                    .padding(.horizontal, 10)
-                    .padding(.bottom, 5)
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 5) {
+                    ForEach(store.agents) { agent in
+                        agentRow(agent)
+                    }
+                }
+                .padding(.horizontal, 10)
             }
 
             Divider().background(.white.opacity(0.07)).padding(.horizontal, 16).padding(.vertical, 8)
@@ -67,7 +70,7 @@ struct CockpitView: View {
                     .font(.system(size: 12))
                     .foregroundStyle(.white.opacity(0.78))
                     .lineLimit(1)
-                Text("\(agent.agentID) · \(agent.elapsed)")
+                Text("\(agent.displayName) · \(agent.elapsed)")
                     .font(.system(size: 10))
                     .foregroundStyle(.white.opacity(0.3))
 
@@ -122,10 +125,8 @@ struct CockpitView: View {
     }
 
     func agentIcon(_ id: String) -> String {
-        switch id {
-        case "codex":       return "cpu"
-        case "claude", "claude-code": return "bolt.circle"
-        default:            return "terminal"
-        }
+        if id == "codex" { return "cpu" }
+        if ClaudeMark.matches(id) { return "bolt.circle" }
+        return "terminal"
     }
 }

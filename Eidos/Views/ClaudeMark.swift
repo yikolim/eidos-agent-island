@@ -34,8 +34,7 @@ struct ClaudeMark: View {
         .onAppear { pulse = true }
     }
 
-    /// True for agents that should render the Claude mark.
     static func matches(_ agentID: String) -> Bool {
-        agentID == "claude" || agentID == "claude-code"
+        agentID == "claude" || agentID == "claude-code" || agentID.hasPrefix("claude-session-")
     }
 }

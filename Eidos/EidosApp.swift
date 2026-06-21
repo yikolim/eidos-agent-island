@@ -14,12 +14,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var islandWindow: IslandWindow?
     let store = AgentStore()
     var server: IslandServer?
+    var scanner: SessionScanner?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Default is .accessory (no Dock icon / menu bar — the intended mode).
-        // EIDOS_DEBUG_REGULAR=1 runs as a regular app so screen-automation tools
-        // that only enumerate regular apps can see and drive the island. Does not
-        // affect normal runs.
         if ProcessInfo.processInfo.environment["EIDOS_DEBUG_REGULAR"] == "1" {
             NSApp.setActivationPolicy(.regular)
         } else {
@@ -32,8 +29,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         server = IslandServer(store: store)
         server?.start()
 
-        // Reposition the island when the screen layout changes (resolution,
-        // display arrangement, notch, etc.)
+        scanner = SessionScanner(store: store)
+        scanner?.start()
+
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(screenParametersChanged),
