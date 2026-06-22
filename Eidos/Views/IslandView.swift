@@ -37,10 +37,19 @@ struct IslandView: View {
             islandShape
                 .fill(Color(hex: "0C0C0C"))
             islandContent
-                .transition(.opacity.animation(.easeInOut(duration: 0.18)))
+                // Content scales in from slightly small as the shape settles, and
+                // fades out quickly on collapse — the Dynamic Island "morph" feel.
+                .transition(.asymmetric(
+                    insertion: .scale(scale: 0.88, anchor: .top)
+                        .combined(with: .opacity)
+                        .animation(.spring(response: 0.36, dampingFraction: 0.74).delay(0.06)),
+                    removal: .opacity.animation(.easeOut(duration: 0.12))
+                ))
         }
         .frame(width: targetSize.width, height: targetSize.height)
-        .animation(.spring(response: 0.42, dampingFraction: 0.72), value: store.islandState)
+        // Fluid, slightly bouncy expand (Alcove / iOS Dynamic Island feel): a
+        // springier response with a touch of overshoot rather than a flat ease.
+        .animation(.spring(response: 0.5, dampingFraction: 0.66), value: store.islandState)
         // Window sizing + centering is handled in IslandWindow (the hosting view
         // resizes the window to fit this frame; the window re-centers on resize).
         .onHover { hovering in store.isHovered = hovering }   // hover expands the island
