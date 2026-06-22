@@ -9,16 +9,17 @@ struct IslandView: View {
         (NSApp.delegate as? AppDelegate)?.islandWindow
     }
 
-    private var targetSize: CGSize {
-        switch store.islandState {
+    private var targetSize: CGSize { Self.size(for: store.islandState, agentCount: store.agents.count) }
+
+    static func size(for state: IslandState, agentCount: Int) -> CGSize {
+        switch state {
         case .idle:     return CGSize(width: 108, height: 14)
         case .mini:     return CGSize(width: 420, height: 38)
         case .cockpit:
             // Measured: header ≈ 48, each agent row ≈ 64, divider ≈ 16,
             // quick-action bar ≈ 56. Scroll only past ~6 rows.
-            let rows = min(max(store.agents.count, 1), 6)
-            let height = CGFloat(48 + rows * 64 + 16 + 56)
-            return CGSize(width: 400, height: height)
+            let rows = min(max(agentCount, 1), 6)
+            return CGSize(width: 400, height: CGFloat(48 + rows * 64 + 16 + 56))
         case .approval: return CGSize(width: 416, height: 298)
         }
     }
@@ -41,11 +42,9 @@ struct IslandView: View {
                 .transition(.opacity.animation(.easeInOut(duration: 0.14)))
         }
         .frame(width: targetSize.width, height: targetSize.height)
-        // Fluid, gooey expand like the iOS Dynamic Island / Alcove: a clearly
-        // bouncy spring that overshoots and settles, not a flat ease.
-        .animation(.spring(response: 0.55, dampingFraction: 0.6), value: store.islandState)
-        // Window sizing + centering is handled in IslandWindow (the hosting view
-        // resizes the window to fit this frame; the window re-centers on resize).
+        // Gentle, smooth expand. The hosting view animates the window's size; the
+        // window pins its top edge (IslandWindow) so it grows straight down.
+        .animation(.spring(response: 0.52, dampingFraction: 0.86), value: store.islandState)
         .onHover { hovering in store.isHovered = hovering }   // hover expands the island
         .gesture(dragGesture.modifiers(.command))   // ⌘-drag to move; plain clicks never shift it
         .onTapGesture(count: 2) { islandWindow?.resetAnchor() }

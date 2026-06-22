@@ -33,49 +33,51 @@ class IslandWindow: NSPanel {
         let view = IslandView().environment(store)
         hostingView = NSHostingView(rootView: AnyView(view))
         contentView = hostingView
-        reposition(width: 266, height: 38)
-
-        // The hosting view auto-resizes the window to fit the SwiftUI content,
-        // but that resize keeps the bottom-left origin — so mini→cockpit grew
-        // rightward off-center. Re-center on every resize to correct it.
-        NotificationCenter.default.addObserver(
-            self, selector: #selector(windowDidResizeNotif),
-            name: NSWindow.didResizeNotification, object: self
-        )
+        reposition(width: 108, height: 14)   // idle size
     }
 
-    private var isRepositioning = false
-
-    /// Re-center whenever the hosting view resizes the window (unless the user is
-    /// mid ⌘-drag). Guarded against the resize our own `setFrame` triggers.
-    @objc private func windowDidResizeNotif() {
-        guard !isRepositioning, dragStartActive == false else { return }
-        let centered: Bool = { if case .approval = store.islandState { return true }; return false }()
-        let s = frame.size
-        reposition(width: s.width, height: s.height, centered: centered)
-    }
-
-    /// Set true by the view while a ⌘-drag is in progress so resizes don't fight it.
+    /// Set true by the view while a ⌘-drag is in progress (so the drag positions
+    /// the window freely without the anchor override fighting it).
     var dragStartActive = false
 
-    /// Position the island. When `centered` is true the drag anchor is ignored
-    /// and it snaps back to the top-center notch — used for important states
-    /// (approvals) that should always be front-and-center.
+    /// Enforce TOP-CENTER anchoring on EVERY frame change — including the
+    /// hosting view's animated resizes as the island grows/shrinks. Without
+    /// this, AppKit keeps the bottom-left origin so the window grows upward
+    /// (off the top of the screen) and then snaps back, which reads as the
+    /// island expanding from its middle. Anchoring the top edge makes it grow
+    /// straight down from y=0 (the notch), tracking the SwiftUI spring smoothly.
+    /// Reposition a proposed frame so its TOP edge and horizontal center stay at
+    /// the anchor, regardless of the size AppKit/the hosting view chose.
+    private func anchored(_ frameRect: NSRect) -> NSRect {
+        guard !dragStartActive, let screen = NSScreen.main else { return frameRect }
+        let anchor = anchorTopCenter ?? defaultAnchor(on: screen)
+        var f = frameRect
+        f.origin.x = anchor.x - f.size.width / 2          // horizontally centered
+        f.origin.y = anchor.y - f.size.height             // top edge pinned to anchor
+        let s = screen.frame
+        f.origin.x = min(max(f.origin.x, s.minX), s.maxX - f.size.width)
+        f.origin.y = min(max(f.origin.y, s.minY), s.maxY - f.size.height)
+        return f
+    }
+
+    // The hosting view animates the window's SIZE as the island grows/shrinks.
+    // Every resize path keeps the bottom-left origin by default (window grows
+    // upward, then content sits centered → looks like it expands from the
+    // middle). Re-anchor the top edge on ALL of them so it grows straight down.
+    override func setFrame(_ frameRect: NSRect, display flag: Bool) {
+        super.setFrame(anchored(frameRect), display: flag)
+    }
+    override func setFrame(_ frameRect: NSRect, display: Bool, animate: Bool) {
+        super.setFrame(anchored(frameRect), display: display, animate: animate)
+    }
+    override func setContentSize(_ size: NSSize) {
+        super.setContentSize(size)
+        super.setFrame(anchored(frame), display: true)
+    }
+
+    /// Position the island at a given size (origin is enforced by `anchored`).
     func reposition(width: CGFloat, height: CGFloat, centered: Bool = false) {
-        guard let screen = NSScreen.main else { return }
-        isRepositioning = true
-        defer { isRepositioning = false }
-        let anchor = (centered ? nil : anchorTopCenter) ?? defaultAnchor(on: screen)
-
-        var x = anchor.x - width / 2
-        var y = anchor.y - height   // anchor.y is the top edge; origin is bottom-left
-
-        // Keep the panel fully on-screen.
-        let f = screen.frame
-        x = min(max(x, f.minX), f.maxX - width)
-        y = min(max(y, f.minY), f.maxY - height)
-
-        setFrame(NSRect(x: x, y: y, width: width, height: height), display: true, animate: false)
+        super.setFrame(anchored(NSRect(x: 0, y: 0, width: width, height: height)), display: true)
     }
 
     /// Top-center, flush with the very top edge of the screen so the island

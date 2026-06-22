@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Eidos — Agent Island</title>
+<style>
+  :root {
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+            "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --mono: "SF Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --ink: #1d1d1f;
+    --ink-soft: #6e6e73;
+    --bg: #fbfbfd;
+    --card: #f5f5f7;
+    --hairline: rgba(0,0,0,0.16);
+    --codex: #7c6fff;
+    --claude: #cc785c;
+    --green: #4ade80;
+    --amber: #faad14;
+    --island: #0c0c0c;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font); color: var(--ink); background: var(--bg);
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  }
+  a { color: inherit; }
+
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 40px;
+    background: rgba(251,251,253,0.8);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .nav-brand { display: flex; align-items: center; gap: 9px; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+  .spark { width: 14px; height: 14px; border-radius: 50%; background: var(--claude); }
+  .btn {
+    font-family: var(--font); font-size: 15px; border-radius: 980px;
+    padding: 7px 17px; text-decoration: none; border: 1px solid var(--hairline);
+    transition: background 0.2s ease;
+  }
+  .btn:hover { background: rgba(0,0,0,0.04); }
+
+  main { max-width: 760px; margin: 0 auto; padding: 96px 32px 120px; }
+
+  h1 {
+    font-size: clamp(34px, 5vw, 52px);
+    font-weight: 600; letter-spacing: -0.02em; line-height: 1.1;
+  }
+  .lede {
+    margin-top: 20px; font-size: 20px; line-height: 1.5;
+    color: var(--ink-soft); font-weight: 400;
+  }
+
+  .island-stage { margin: 48px 0 64px; display: flex; }
+  .island {
+    background: var(--island); color: #fff; border-radius: 18px;
+    box-shadow: 0 16px 44px rgba(0,0,0,0.28);
+    padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: blink 1.4s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .chip { font-size: 13px; color: rgba(255,255,255,0.85); display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.07); padding: 4px 10px; border-radius: 9px; }
+  .chip .sw { width: 6px; height: 6px; border-radius: 50%; }
+  .island .meta { font-size: 12px; color: rgba(255,255,255,0.4); margin-left: 4px; }
+
+  h2 {
+    font-size: 13px; font-weight: 600; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--ink-soft);
+    margin: 56px 0 18px;
+  }
+
+  .states { display: flex; flex-direction: column; gap: 0; }
+  .row {
+    display: grid; grid-template-columns: 96px 1fr auto;
+    gap: 18px; align-items: baseline;
+    padding: 16px 0; border-top: 1px solid rgba(0,0,0,0.08);
+  }
+  .row .name { font-size: 16px; font-weight: 600; }
+  .row .desc { font-size: 16px; color: var(--ink-soft); line-height: 1.45; }
+  .row .size { font-family: var(--mono); font-size: 13px; color: var(--ink-soft); white-space: nowrap; }
+
+  ul.flat { list-style: none; }
+  ul.flat li {
+    font-size: 16px; line-height: 1.5; color: var(--ink-soft);
+    padding: 12px 0; border-top: 1px solid rgba(0,0,0,0.08);
+  }
+  ul.flat li b { color: var(--ink); font-weight: 600; }
+
+  .code {
+    background: #0c0c0c; border-radius: 16px; margin-top: 4px; overflow: hidden;
+  }
+  pre {
+    font-family: var(--mono); font-size: 13.5px; line-height: 1.7;
+    color: #e6e6e6; padding: 22px 24px; overflow-x: auto; white-space: pre;
+  }
+  pre .k { color: var(--codex); }
+  pre .s { color: var(--green); }
+  pre .c { color: rgba(255,255,255,0.4); }
+  pre .f { color: var(--amber); }
+
+  footer {
+    max-width: 760px; margin: 0 auto; padding: 28px 32px;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    font-size: 13px; color: var(--ink-soft);
+  }
+
+  @media (max-width: 620px) {
+    .row { grid-template-columns: 1fr; gap: 4px; }
+    .row .size { grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-brand"><span class="spark"></span>Eidos</div>
+    <a href="https://github.com/yikolim/eidos-agent-island" class="btn">GitHub</a>
+  </nav>
+
+  <main>
+    <h1>A floating island for your background agents.</h1>
+    <p class="lede">
+      Eidos is a native macOS panel that sits at the top of the screen and shows the
+      status of background AI agents — Claude Code, Codex, or your own. It updates in
+      real time and blocks agents for your approval before they edit files or run commands.
+    </p>
+
+    <div class="island-stage">
+      <div class="island">
+        <span class="dot"></span>
+        <span class="chip"><span class="sw" style="background:var(--claude)"></span>Claude</span>
+        <span class="chip"><span class="sw" style="background:var(--codex)"></span>Codex</span>
+        <span class="meta">2 running</span>
+      </div>
+    </div>
+
+    <h2>States</h2>
+    <div class="states">
+      <div class="row">
+        <span class="name">Idle</span>
+        <span class="desc">No agents running.</span>
+        <span class="size">108 × 14</span>
+      </div>
+      <div class="row">
+        <span class="name">Mini</span>
+        <span class="desc">One agent running, with a live status dot.</span>
+        <span class="size">266 × 38</span>
+      </div>
+      <div class="row">
+        <span class="name">Cockpit</span>
+        <span class="desc">Two or more agents — task, elapsed time, and progress per agent.</span>
+        <span class="size">400 × 240</span>
+      </div>
+      <div class="row">
+        <span class="name">Approval</span>
+        <span class="desc">An agent requested approval; shows the pending actions.</span>
+        <span class="size">416 × 298</span>
+      </div>
+    </div>
+
+    <h2>What it does</h2>
+    <ul class="flat">
+      <li><b>Runs faceless.</b> No Dock icon and no menu-bar item — only the island.</li>
+      <li><b>Real-time status.</b> Agents post status, task, and progress over a local HTTP server.</li>
+      <li><b>Blocks for approval.</b> A synchronous request holds an agent until you approve or reject.</li>
+      <li><b>Hooks into Claude Code.</b> Shell hooks mirror Claude Code's status into the island.</li>
+      <li><b>Python drop-in.</b> <span style="font-family:var(--mono)">eidos.py</span> wraps the OpenAI Agents SDK with <span style="font-family:var(--mono)">IslandHook</span> and <span style="font-family:var(--mono)">approval_tool</span>.</li>
+      <li><b>Dependency-free.</b> SwiftUI + AppKit + Network.framework. Builds with the Command Line Tools.</li>
+    </ul>
+
+    <h2>Protocol — localhost:7799</h2>
+    <div class="code">
+<pre><span class="k">POST</span> /event    <span class="c">status update; fire-and-forget</span>
+<span class="k">POST</span> /approve  <span class="c">blocks until you approve / reject</span>
+<span class="k">GET</span>  /status   <span class="c">what's running now</span></pre>
+    </div>
+
+    <h2>Run it</h2>
+    <div class="code">
+<pre><span class="c"># macOS 14+ · no full Xcode required</span>
+git clone https://github.com/yikolim/eidos-agent-island
+cd eidos-agent-island
+./build.sh --run</pre>
+    </div>
+  </main>
+
+  <footer>Eidos — a personal dev tool. Design reference: Alcove.</footer>
+
+</body>
+</html>
