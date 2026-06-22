@@ -33,15 +33,21 @@ struct MiniView: View {
     }
 
     private var claudeSessionChip: some View {
-        HStack(spacing: 5) {
+        // One session → show its name (the project it's working in); several →
+        // show "Claude Code" with a count badge.
+        let label = claudeSessions.count == 1
+            ? (claudeSessions.first?.task ?? "Claude Code")
+            : "Claude Code"
+        return HStack(spacing: 5) {
             ClaudeMark(color: Color(hex: "cc785c"), active: true)
                 .frame(width: 12, height: 12)
-            Text("Claude Code")
+            Text(label)
                 .font(.system(size: 11.5))
                 .foregroundStyle(.white.opacity(0.82))
+                .lineLimit(1)
             if claudeSessions.count > 1 {
                 Text("\(claudeSessions.count)")
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(Color(hex: "cc785c"))
                     .padding(.horizontal, 5)
                     .padding(.vertical, 1)

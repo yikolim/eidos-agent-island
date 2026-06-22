@@ -27,6 +27,10 @@ if [ "$task" = "@tool" ]; then
   if [ -n "$tool" ]; then task="Using $tool"; else task="Working"; fi
 fi
 
+# Prefer the session name (the project folder Claude is working in) as the label.
+cwd="$(printf '%s' "$payload" | /usr/bin/jq -r '.cwd // empty' 2>/dev/null)"
+if [ -n "$cwd" ]; then task="$(basename "$cwd")"; fi
+
 body="$(/usr/bin/jq -nc --arg a "$agent" --arg s "$status" --arg t "$task" \
   '{agent:$a, status:$s} + (if $t == "" then {} else {task:$t} end)')"
 

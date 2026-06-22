@@ -33,6 +33,15 @@ struct IslandView: View {
         }
     }
 
+    /// Top corners: rounded for the compact/idle pill, but squared (0) for the
+    /// expanded states so the card hangs flush from the top edge / notch.
+    private var topRadius: CGFloat {
+        switch store.islandState {
+        case .idle, .mini: return cornerRadius
+        case .cockpit, .approval: return 0
+        }
+    }
+
     var body: some View {
         ZStack {
             islandShape
@@ -51,10 +60,16 @@ struct IslandView: View {
         .onTapGesture { store.cycleState() }
     }
 
-    /// A fully-rounded pill/rounded-rect (continuous corners) — the Dynamic
-    /// Island shape, rather than a squared-top card.
-    private var islandShape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+    /// Compact/idle = fully-rounded pill; expanded = squared top, rounded bottom
+    /// (hangs from the notch). Matches the Dynamic Island's compact→expanded morph.
+    private var islandShape: UnevenRoundedRectangle {
+        UnevenRoundedRectangle(
+            topLeadingRadius: topRadius,
+            bottomLeadingRadius: cornerRadius,
+            bottomTrailingRadius: cornerRadius,
+            topTrailingRadius: topRadius,
+            style: .continuous
+        )
     }
 
     /// Drag the whole island to reposition it. A small minimum distance keeps
