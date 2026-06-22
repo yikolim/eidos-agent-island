@@ -1,8 +1,10 @@
-# Eidos — Agent Island
+# Eidos Agents Dynamic Island
 
 A native macOS app that puts a **Dynamic Island–style floating cockpit** at the top of your screen for monitoring and approving background AI agents (Claude Code, Codex, custom agents).
 
 It runs as a faceless menu-bar-level panel (no Dock icon) and reacts in real time to agents talking to a tiny embedded HTTP server on `localhost:7799`.
+
+The repo also includes a small product site at [product-site/index.html](product-site/index.html) with updated "Coming soon" messaging and a waitlist signup UI.
 
 ![states](docs/states.png)
 

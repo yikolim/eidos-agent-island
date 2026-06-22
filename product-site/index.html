@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Eidos — Agent Island</title>
+<title>Eidos Agents Dynamic Island</title>
 <style>
   :root {
     --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
@@ -42,19 +42,96 @@
   .btn {
     font-family: var(--font); font-size: 15px; border-radius: 980px;
     padding: 7px 17px; text-decoration: none; border: 1px solid var(--hairline);
-    transition: background 0.2s ease;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
   .btn:hover { background: rgba(0,0,0,0.04); }
+  .btn-primary {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+  }
+  .btn-primary:hover { background: #000; }
 
   main { max-width: 760px; margin: 0 auto; padding: 96px 32px 120px; }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: rgba(12,12,12,0.06);
+    color: var(--ink-soft);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--amber);
+  }
 
   h1 {
     font-size: clamp(34px, 5vw, 52px);
     font-weight: 600; letter-spacing: -0.02em; line-height: 1.1;
+    margin-top: 18px;
   }
   .lede {
     margin-top: 20px; font-size: 20px; line-height: 1.5;
     color: var(--ink-soft); font-weight: 400;
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 12px;
+    margin-top: 28px;
+    align-items: center;
+    width: 100%;
+  }
+  .waitlist {
+    display: flex;
+    flex: 1;
+    flex-wrap: nowrap;
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+  }
+  .waitlist input {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font);
+    font-size: 15px;
+    padding: 13px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(0,0,0,0.12);
+    background: #fff;
+    color: var(--ink);
+    outline: none;
+  }
+  .waitlist input:focus {
+    border-color: rgba(124,111,255,0.6);
+    box-shadow: 0 0 0 4px rgba(124,111,255,0.08);
+  }
+  .waitlist button {
+    cursor: pointer;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .hero-actions > .btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .form-note {
+    margin-top: 12px;
+    min-height: 20px;
+    font-size: 14px;
+    color: var(--ink-soft);
   }
 
   .island-stage { margin: 48px 0 64px; display: flex; }
@@ -113,23 +190,49 @@
   @media (max-width: 620px) {
     .row { grid-template-columns: 1fr; gap: 4px; }
     .row .size { grid-column: 1; }
+    .hero-actions,
+    .waitlist {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .waitlist input {
+      width: 100%;
+    }
+    .waitlist button, .hero-actions .btn { width: 100%; text-align: center; }
   }
 </style>
 </head>
 <body>
 
   <nav>
-    <div class="nav-brand"><span class="spark"></span>Eidos</div>
-    <a href="https://github.com/yikolim/eidos-agent-island" class="btn">GitHub</a>
+    <div class="nav-brand"><span class="spark"></span>Eidos Agents Dynamic Island</div>
+    <a href="#waitlist-form" class="btn btn-primary">Join waitlist</a>
   </nav>
 
   <main>
-    <h1>A floating island for your background agents.</h1>
+    <div class="eyebrow">Coming soon</div>
+    <h1>A dynamic island for supervising your background agents on macOS.</h1>
     <p class="lede">
-      Eidos is a native macOS panel that sits at the top of the screen and shows the
-      status of background AI agents — Claude Code, Codex, or your own. It updates in
-      real time and blocks agents for your approval before they edit files or run commands.
+      Eidos Agents Dynamic Island is a native macOS panel that sits at the top of the
+      screen and shows the status of background AI agents. Coming soon: a lightweight
+      command center for Claude Code, Codex, and your own agents, with real-time status
+      and blocking approvals before they edit files or run commands.
     </p>
+    <div class="hero-actions">
+      <form class="waitlist" id="waitlist-form">
+        <input
+          type="email"
+          id="waitlist-email"
+          name="email"
+          placeholder="Enter your email for the waitlist"
+          autocomplete="email"
+          required
+        />
+        <button type="submit" class="btn btn-primary">Join waitlist</button>
+      </form>
+      <a href="https://github.com/yikolim/eidos-agent-island" class="btn">View on GitHub</a>
+    </div>
+    <p class="form-note" id="waitlist-note">Join the waitlist to hear when the first build is ready.</p>
 
     <div class="island-stage">
       <div class="island">
@@ -137,30 +240,6 @@
         <span class="chip"><span class="sw" style="background:var(--claude)"></span>Claude</span>
         <span class="chip"><span class="sw" style="background:var(--codex)"></span>Codex</span>
         <span class="meta">2 running</span>
-      </div>
-    </div>
-
-    <h2>States</h2>
-    <div class="states">
-      <div class="row">
-        <span class="name">Idle</span>
-        <span class="desc">No agents running.</span>
-        <span class="size">108 × 14</span>
-      </div>
-      <div class="row">
-        <span class="name">Mini</span>
-        <span class="desc">One agent running, with a live status dot.</span>
-        <span class="size">266 × 38</span>
-      </div>
-      <div class="row">
-        <span class="name">Cockpit</span>
-        <span class="desc">Two or more agents — task, elapsed time, and progress per agent.</span>
-        <span class="size">400 × 240</span>
-      </div>
-      <div class="row">
-        <span class="name">Approval</span>
-        <span class="desc">An agent requested approval; shows the pending actions.</span>
-        <span class="size">416 × 298</span>
       </div>
     </div>
 
@@ -190,7 +269,38 @@ cd eidos-agent-island
     </div>
   </main>
 
-  <footer>Eidos — a personal dev tool. Design reference: Alcove.</footer>
+  <footer>Eidos Agents Dynamic Island — a personal dev tool. Design reference: Alcove.</footer>
+
+  <script>
+    const waitlistForm = document.getElementById("waitlist-form");
+    const waitlistEmail = document.getElementById("waitlist-email");
+    const waitlistNote = document.getElementById("waitlist-note");
+    const WAITLIST_STORAGE_KEY = "eidosWaitlistEmails";
+
+    function setNote(message, isError) {
+      waitlistNote.textContent = message;
+      waitlistNote.style.color = isError ? "#c2410c" : "";
+    }
+
+    waitlistForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      const email = waitlistEmail.value.trim().toLowerCase();
+      if (!email) {
+        setNote("Enter an email address to join the waitlist.", true);
+        return;
+      }
+
+      const existing = JSON.parse(localStorage.getItem(WAITLIST_STORAGE_KEY) || "[]");
+      if (!existing.includes(email)) {
+        existing.push(email);
+        localStorage.setItem(WAITLIST_STORAGE_KEY, JSON.stringify(existing));
+      }
+
+      waitlistForm.reset();
+      setNote("You're on the waitlist. Email saved for launch updates.", false);
+    });
+  </script>
 
 </body>
 </html>
