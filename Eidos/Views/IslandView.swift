@@ -23,12 +23,12 @@ struct IslandView: View {
         }
     }
 
-    private var bottomRadius: CGFloat {
+    private var cornerRadius: CGFloat {
         switch store.islandState {
-        case .idle:     return 10
-        case .mini:     return 19
-        case .cockpit:  return 24
-        case .approval: return 24
+        case .idle:     return 7    // small pill
+        case .mini:     return 19   // half-height = full pill
+        case .cockpit:  return 28
+        case .approval: return 30
         }
     }
 
@@ -37,19 +37,13 @@ struct IslandView: View {
             islandShape
                 .fill(Color(hex: "0C0C0C"))
             islandContent
-                // Content scales in from slightly small as the shape settles, and
-                // fades out quickly on collapse — the Dynamic Island "morph" feel.
-                .transition(.asymmetric(
-                    insertion: .scale(scale: 0.88, anchor: .top)
-                        .combined(with: .opacity)
-                        .animation(.spring(response: 0.36, dampingFraction: 0.74).delay(0.06)),
-                    removal: .opacity.animation(.easeOut(duration: 0.12))
-                ))
+                // Content fades in/out fast and tracks the morph (no staged delay).
+                .transition(.opacity.animation(.easeInOut(duration: 0.14)))
         }
         .frame(width: targetSize.width, height: targetSize.height)
-        // Fluid, slightly bouncy expand (Alcove / iOS Dynamic Island feel): a
-        // springier response with a touch of overshoot rather than a flat ease.
-        .animation(.spring(response: 0.5, dampingFraction: 0.66), value: store.islandState)
+        // Fluid, gooey expand like the iOS Dynamic Island / Alcove: a clearly
+        // bouncy spring that overshoots and settles, not a flat ease.
+        .animation(.spring(response: 0.55, dampingFraction: 0.6), value: store.islandState)
         // Window sizing + centering is handled in IslandWindow (the hosting view
         // resizes the window to fit this frame; the window re-centers on resize).
         .onHover { hovering in store.isHovered = hovering }   // hover expands the island
@@ -58,16 +52,10 @@ struct IslandView: View {
         .onTapGesture { store.cycleState() }
     }
 
-    /// Squared top, rounded bottom — so the island looks like it hangs from the
-    /// top edge of the screen (the Dynamic Island shape) rather than a floating card.
-    private var islandShape: UnevenRoundedRectangle {
-        UnevenRoundedRectangle(
-            topLeadingRadius: 0,
-            bottomLeadingRadius: bottomRadius,
-            bottomTrailingRadius: bottomRadius,
-            topTrailingRadius: 0,
-            style: .continuous
-        )
+    /// A fully-rounded pill/rounded-rect (continuous corners) — the Dynamic
+    /// Island shape, rather than a squared-top card.
+    private var islandShape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
     }
 
     /// Drag the whole island to reposition it. A small minimum distance keeps

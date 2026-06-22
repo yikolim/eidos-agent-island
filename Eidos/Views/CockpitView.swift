@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct CockpitView: View {
     @Environment(AgentStore.self) private var store
@@ -92,6 +93,24 @@ struct CockpitView: View {
         .padding(10)
         .background(.white.opacity(0.03))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .contentShape(Rectangle())
+        .onTapGesture { activateApp(for: agent.agentID) }   // click a row → focus its app
+    }
+
+    /// Bring the agent's source app to the front: Codex rows → Codex.app,
+    /// Claude rows → Claude.app.
+    func activateApp(for agentID: String) {
+        let path: String
+        if agentID == "codex" {
+            path = "/Applications/Codex.app"
+        } else if ClaudeMark.matches(agentID) {
+            path = "/Applications/Claude.app"
+        } else {
+            return
+        }
+        let url = URL(fileURLWithPath: path)
+        guard FileManager.default.fileExists(atPath: path) else { return }
+        NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
     }
 
     func statusBadge(_ status: String) -> some View {
