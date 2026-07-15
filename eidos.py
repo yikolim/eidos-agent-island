@@ -13,19 +13,24 @@ Usage:
 """
 
 import json
+import sys
 import time
 import uuid
 from typing import Any
 
+# httpx is required for HTTP calls; agents SDK only needed for IslandHook/approval_tool.
+# We defer the agents import so `python eidos.py --setup-hooks` works without the SDK.
 try:
     import httpx
 except ImportError:
-    raise ImportError("eidos.py requires httpx: pip install httpx")
+    if "--setup-hooks" not in sys.argv:
+        raise ImportError("eidos.py requires httpx: pip install httpx")
 
 try:
     from agents import AgentHooks, RunContextWrapper, Agent, Tool, FunctionTool
 except ImportError:
-    raise ImportError("eidos.py requires the OpenAI Agents SDK: pip install openai-agents")
+    if "--setup-hooks" not in sys.argv:
+        raise ImportError("eidos.py requires the OpenAI Agents SDK: pip install openai-agents")
 
 ISLAND_URL = "http://localhost:7799"
 DEFAULT_TIMEOUT = 2.0       # status event timeout (fire-and-forget)
@@ -221,10 +226,90 @@ def island_running(island_url: str = ISLAND_URL) -> bool:
         return False
 
 
-# ── Example usage (run this file directly to test) ───────────────────────────
+# ── Claude Code hook installer ────────────────────────────────────────────────
+# Run `python eidos.py --setup-hooks` once to wire the island into every
+# Claude Code session automatically. Each session POSTs a start event on
+# launch and a done event on exit so the island count stays accurate.
+
+_HOOK_MARKER = "eidos-island"  # used to detect already-installed hooks
+
+_START_CMD = (
+    "curl -sf -X POST http://localhost:7799/event "
+    "-H 'Content-Type: application/json' "
+    '-d "{\\"agent\\":\\"claude-session-$PPID\\",\\"status\\":\\"running\\",'
+    '\\"task\\":\\"Claude Code\\"}" '
+    ">/dev/null 2>&1 &"
+)
+
+_STOP_CMD = (
+    "curl -sf -X POST http://localhost:7799/event "
+    "-H 'Content-Type: application/json' "
+    '-d "{\\"agent\\":\\"claude-session-$PPID\\",\\"status\\":\\"done\\"}" '
+    ">/dev/null 2>&1 &"
+)
+
+
+def setup_hooks(settings_path: str | None = None) -> None:
+    """
+    Install SessionStart / Stop hooks in ~/.claude/settings.json so that
+    every local Claude Code session automatically reports itself to the island.
+
+    Safe to run multiple times — existing hooks are preserved and duplicates
+    are not added.
+    """
+    import os
+
+    path = settings_path or os.path.expanduser("~/.claude/settings.json")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    # Load existing settings (or start fresh).
+    try:
+        with open(path) as f:
+            settings: dict = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        settings = {}
+
+    hooks: dict = settings.setdefault("hooks", {})
+
+    def _already_installed(event_hooks: list) -> bool:
+        return any(
+            h.get("command", "").find(_HOOK_MARKER) != -1
+            or h.get("command", "").find("localhost:7799") != -1
+            for entry in event_hooks
+            for h in entry.get("hooks", [])
+        )
+
+    def _add_hook(event: str, command: str) -> bool:
+        """Returns True if the hook was added (False if already present)."""
+        event_list: list = hooks.setdefault(event, [])
+        if _already_installed(event_list):
+            return False
+        event_list.append({
+            "hooks": [{"type": "command", "command": f"# {_HOOK_MARKER}\n{command}"}]
+        })
+        return True
+
+    added_start = _add_hook("SessionStart", _START_CMD)
+    added_stop  = _add_hook("Stop",         _STOP_CMD)
+
+    with open(path, "w") as f:
+        json.dump(settings, f, indent=2)
+
+    if added_start or added_stop:
+        print(f"✓ Eidos hooks installed in {path}")
+        print("  Every new 'claude' session will now register with the island.")
+    else:
+        print(f"Eidos hooks already present in {path} — nothing changed.")
+
+
+# ── Example usage / CLI ───────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import sys
+
+    if "--setup-hooks" in sys.argv:
+        setup_hooks()
+        sys.exit(0)
 
     print(f"Checking if island is running at {ISLAND_URL}...")
     if island_running():
@@ -234,9 +319,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Send a test event
-    hook = IslandHook("codex")
     print("Sending test status event...")
-
     with httpx.Client(timeout=2.0) as c:
         c.post(f"{ISLAND_URL}/event", json={
             "agent": "codex",
