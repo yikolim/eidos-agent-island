@@ -50,7 +50,7 @@ PLIST
 echo "==> Compiling (target macOS 14)"
 swiftc \
   -O \
-  -target arm64-apple-macosx14.0 \
+  -target "$(uname -m)-apple-macosx14.0" \
   -framework SwiftUI -framework AppKit -framework IOKit \
   -framework UserNotifications -framework ServiceManagement \
   -parse-as-library \

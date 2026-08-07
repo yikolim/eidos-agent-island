@@ -35,6 +35,8 @@ final class AgentModeEngine {
     private(set) var agents: [AgentProcess] = []
     private(set) var power = PowerSnapshot(batteryPercent: nil, onACPower: true, isCharging: false)
     private(set) var lidClosedModeEnabled = false
+    /// Mirrors assertion.isActive as a tracked property so SwiftUI observes it.
+    private(set) var isHoldingAwake = false
     var lastError: String?
 
     private let settings = AppSettings.shared
@@ -69,6 +71,7 @@ final class AgentModeEngine {
         timer?.invalidate()
         timer = nil
         assertion.release()
+        isHoldingAwake = false
         if lidClosedModeEnabled {
             lidController.disable()
             lidClosedModeEnabled = false
@@ -176,8 +179,11 @@ final class AgentModeEngine {
                 state = .idle
                 return
             }
-            engageAwake()
-            state = .active(since: activeSince ?? Date())
+            if engageAwake() {
+                state = .active(since: activeSince ?? Date())
+            } else {
+                state = .batteryHold
+            }
             return
         }
 
@@ -204,24 +210,27 @@ final class AgentModeEngine {
         }
     }
 
-    private func engageAwake() {
+    /// Returns true if the assertion is (now) held.
+    private func engageAwake() -> Bool {
         guard !assertion.isActive else {
             if activeSince == nil { activeSince = Date() }
-            return
+            return true
         }
         // Refuse to start on a critically low battery (section 11).
         if let percent = power.batteryPercent, !power.onACPower,
            percent <= AppSettings.criticalBatteryPercent {
-            state = .batteryHold
-            return
+            return false
         }
         assertion.engage(reason: "Agent Mode: AI agents are working")
-        activeSince = Date()
+        isHoldingAwake = assertion.isActive
+        activeSince = assertion.isActive ? Date() : nil
+        return assertion.isActive
     }
 
     private func releaseAwake(notifyStop: Bool) {
         let wasActive = assertion.isActive
         assertion.release()
+        isHoldingAwake = false
         activeSince = nil
         if wasActive, notifyStop {
             Notifier.shared.post(.agentModeStopped)
@@ -231,17 +240,17 @@ final class AgentModeEngine {
 
     // MARK: - UI helpers
 
-    var isHoldingAwake: Bool { assertion.isActive }
-
     var sleepStatusText: String {
-        if assertion.isActive {
-            return lidClosedModeEnabled
-                ? "Disabled while agents are active (lid-closed OK)"
-                : "Disabled while agents are active"
-        }
+        // The assertion stays held during the grace countdown, so check
+        // grace first or the countdown would never show.
         if case .grace(let until) = state {
             let remaining = max(0, Int(until.timeIntervalSinceNow))
             return "Restoring in \(remaining / 60)m \(remaining % 60)s"
+        }
+        if isHoldingAwake {
+            return lidClosedModeEnabled
+                ? "Disabled while agents are active (lid-closed OK)"
+                : "Disabled while agents are active"
         }
         return "Normal"
     }

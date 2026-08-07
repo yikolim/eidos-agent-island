@@ -69,8 +69,10 @@ struct SettingsView: View {
 
             Section("General") {
                 Toggle("Notifications", isOn: $settings.notificationsEnabled)
+                // Read the live SMAppService status so the toggle can't drift
+                // from changes made in System Settings.
                 Toggle("Launch at login", isOn: Binding(
-                    get: { settings.launchAtLogin },
+                    get: { LoginItem.isEnabled },
                     set: { on in
                         if LoginItem.set(enabled: on) {
                             settings.launchAtLogin = on

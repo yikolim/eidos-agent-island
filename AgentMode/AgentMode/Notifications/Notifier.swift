@@ -4,14 +4,11 @@ import UserNotifications
 /// Local notifications for the events in section 12 of the brief.
 final class Notifier {
     static let shared = Notifier()
-    private var authorized = false
 
     private init() {}
 
     func requestAuthorization() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in
-            self.authorized = granted
-        }
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
     }
 
     enum Event {

@@ -3,6 +3,7 @@ import SwiftUI
 /// The menu-bar dropdown: live status per section 6 of the brief.
 struct MenuView: View {
     @Environment(AgentModeEngine.self) private var engine
+    @Environment(\.openSettings) private var openSettings
     @State private var settings = AppSettings.shared
 
     var body: some View {
@@ -103,10 +104,13 @@ struct MenuView: View {
             Divider()
 
             HStack {
-                SettingsLink {
-                    Text("Settings…")
-                        .font(.system(size: 12))
+                Button("Settings…") {
+                    // Accessory-policy apps open Settings behind other windows
+                    // unless activated first.
+                    NSApp.activate(ignoringOtherApps: true)
+                    openSettings()
                 }
+                .font(.system(size: 12))
                 Spacer()
                 Button("Quit") {
                     NSApplication.shared.terminate(nil)

@@ -38,7 +38,9 @@ final class ProcessMonitor {
             .filter { !$0.isEmpty }
         let ownPid = ProcessInfo.processInfo.processIdentifier
 
-        var pids = [pid_t](repeating: 0, count: 4096)
+        // Size the buffer from the live process table (plus headroom for churn).
+        let needed = Int(proc_listallpids(nil, 0))
+        var pids = [pid_t](repeating: 0, count: max(4096, needed + 256))
         // proc_listallpids returns the number of PIDs written (not bytes).
         let pidCount = proc_listallpids(&pids, Int32(pids.count * MemoryLayout<pid_t>.size))
         guard pidCount > 0 else { return [] }
@@ -134,10 +136,18 @@ final class ProcessMonitor {
         var info = kinfo_proc()
         var size = MemoryLayout<kinfo_proc>.stride
         guard sysctl(&mib, 4, &info, &size, nil, 0) == 0, size > 0 else { return nil }
-        let tv = info.kp_proc.p_starttime
+        // p_starttime is a C macro for p_un.__p_starttime; macros aren't imported.
+        let tv = info.kp_proc.p_un.__p_starttime
         guard tv.tv_sec > 0 else { return nil }
         return Date(timeIntervalSince1970: Double(tv.tv_sec) + Double(tv.tv_usec) / 1e6)
     }
+
+    /// ri_user_time/ri_system_time are in mach_absolute_time units, not ns.
+    private static let timebase: mach_timebase_info_data_t = {
+        var tb = mach_timebase_info_data_t()
+        mach_timebase_info(&tb)
+        return tb
+    }()
 
     private static func resourceUsage(pid: pid_t) -> (cpuTimeNs: UInt64, memoryBytes: UInt64)? {
         var usage = rusage_info_current()
@@ -147,7 +157,9 @@ final class ProcessMonitor {
             }
         }
         guard result == 0 else { return nil }
-        return (usage.ri_user_time + usage.ri_system_time, usage.ri_phys_footprint)
+        let ticks = usage.ri_user_time + usage.ri_system_time
+        let ns = ticks * UInt64(timebase.numer) / UInt64(timebase.denom)
+        return (ns, usage.ri_phys_footprint)
     }
 
     /// argv of a process via sysctl(KERN_PROCARGS2). Only works for processes
