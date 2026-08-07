@@ -6,6 +6,8 @@ It runs as a faceless menu-bar-level panel (no Dock icon) and reacts in real tim
 
 The repo also includes a small product site at [product-site/index.html](product-site/index.html) with updated "Coming soon" messaging and a waitlist signup UI.
 
+**New:** [AgentMode/](AgentMode/README.md) — a sibling menu-bar app ("Close your Mac. Your agents keep working.") that keeps the Mac awake while AI agents run overnight, then restores normal sleep when they finish. Built from the Agent Mode product brief; see its README for the full feature list and build instructions.
+
 ![states](docs/states.png)
 
 ## States

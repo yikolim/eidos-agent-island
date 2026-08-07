@@ -1,0 +1,41 @@
+name: AgentMode
+options:
+  bundleIdPrefix: com.agentmode
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "15"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    PRODUCT_NAME: AgentMode
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    ENABLE_HARDENED_RUNTIME: YES
+
+targets:
+  AgentMode:
+    type: application
+    platform: macOS
+    sources:
+      - path: AgentMode
+        excludes:
+          - "**/*.md"
+    info:
+      path: AgentMode/Info.plist
+      properties:
+        CFBundleName: AgentMode
+        CFBundleDisplayName: Agent Mode
+        CFBundleIdentifier: com.agentmode.app
+        CFBundleVersion: "1"
+        CFBundleShortVersionString: "0.1.0"
+        LSUIElement: true
+        NSPrincipalClass: NSApplication
+        CFBundleIconFile: ""
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.agentmode.app
+        INFOPLIST_FILE: AgentMode/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""
+        COMBINE_HIDPI_IMAGES: YES
