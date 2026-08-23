@@ -125,7 +125,8 @@ final class ProcessMonitor {
     }
 
     private static func processPath(pid: pid_t) -> String {
-        var buf = [CChar](repeating: 0, count: Int(PROC_PIDPATHINFO_MAXSIZE))
+        // PROC_PIDPATHINFO_MAXSIZE (4*MAXPATHLEN) is a macro Swift won't import.
+        var buf = [CChar](repeating: 0, count: 4 * Int(MAXPATHLEN))
         let n = proc_pidpath(pid, &buf, UInt32(buf.count))
         guard n > 0 else { return "" }
         return String(cString: buf)
