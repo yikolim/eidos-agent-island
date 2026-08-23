@@ -17,6 +17,7 @@ final class Notifier {
         case batteryThreshold(percent: Int)
         case agentModeStopped
         case sleepRestored
+        case sleepingNow
         case lidModeRecovered
 
         var title: String {
@@ -26,6 +27,7 @@ final class Notifier {
             case .batteryThreshold: return "Battery threshold reached"
             case .agentModeStopped: return "Agent Mode stopped"
             case .sleepRestored:    return "Normal sleep restored"
+            case .sleepingNow:      return "Putting Mac to sleep"
             case .lidModeRecovered: return "Sleep settings recovered"
             }
         }
@@ -42,6 +44,8 @@ final class Notifier {
                 return "No monitored agents remain. Your Mac will sleep normally."
             case .sleepRestored:
                 return "Your previous sleep settings are back in effect."
+            case .sleepingNow:
+                return "All agents finished and you're on battery — sleeping to save power."
             case .lidModeRecovered:
                 return "A previous session ended without restoring sleep settings. They have been restored now."
             }

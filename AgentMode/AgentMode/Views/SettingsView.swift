@@ -34,6 +34,7 @@ struct SettingsView: View {
                     )
                 }
                 Toggle("Require charger to keep Mac awake", isOn: $settings.requireCharger)
+                Toggle("Sleep the Mac when agents finish (on battery)", isOn: $settings.activeSleepWhenIdle)
                 Text("Agent Mode never engages below \(AppSettings.criticalBatteryPercent)% on battery, and never overrides macOS thermal protections.")
                     .font(.caption)
                     .foregroundStyle(.secondary)

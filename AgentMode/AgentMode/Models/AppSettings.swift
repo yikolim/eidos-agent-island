@@ -58,6 +58,10 @@ final class AppSettings {
     var batteryCutoffPercent: Int { didSet { save() } }
     /// Only keep awake while the charger is connected.
     var requireCharger: Bool { didSet { save() } }
+    /// Actively put the Mac to sleep once the last agent finishes (and the
+    /// grace period expires) while on battery power. Never fires while any
+    /// monitored agent is still running.
+    var activeSleepWhenIdle: Bool { didSet { save() } }
     /// Extra process-name substrings (lowercased match) the user wants monitored.
     var customProcessNames: [String] { didSet { save() } }
     var notificationsEnabled: Bool { didSet { save() } }
@@ -75,6 +79,8 @@ final class AppSettings {
         var failsafeTimeout: FailsafeTimeout
         var batteryCutoffPercent: Int
         var requireCharger: Bool
+        // Optional so snapshots saved by older builds still decode.
+        var activeSleepWhenIdle: Bool?
         var customProcessNames: [String]
         var notificationsEnabled: Bool
         var launchAtLogin: Bool
@@ -89,6 +95,7 @@ final class AppSettings {
             failsafeTimeout = s.failsafeTimeout
             batteryCutoffPercent = s.batteryCutoffPercent
             requireCharger = s.requireCharger
+            activeSleepWhenIdle = s.activeSleepWhenIdle ?? false
             customProcessNames = s.customProcessNames
             notificationsEnabled = s.notificationsEnabled
             launchAtLogin = s.launchAtLogin
@@ -99,6 +106,7 @@ final class AppSettings {
             failsafeTimeout = .twelveHours
             batteryCutoffPercent = 20
             requireCharger = false
+            activeSleepWhenIdle = false
             customProcessNames = []
             notificationsEnabled = true
             launchAtLogin = false
@@ -113,6 +121,7 @@ final class AppSettings {
             failsafeTimeout: failsafeTimeout,
             batteryCutoffPercent: batteryCutoffPercent,
             requireCharger: requireCharger,
+            activeSleepWhenIdle: activeSleepWhenIdle,
             customProcessNames: customProcessNames,
             notificationsEnabled: notificationsEnabled,
             launchAtLogin: launchAtLogin

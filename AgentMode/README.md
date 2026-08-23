@@ -45,6 +45,7 @@ cd AgentMode
 | Agent detection | `proc_listallpids` / `proc_pidpath` / `proc_name`, plus `sysctl(KERN_PROCARGS2)` argv inspection for interpreter processes (node, bun, python, deno), polled every 3 s |
 | Resource stats | `proc_pid_rusage` — CPU % from time deltas, memory from `ri_phys_footprint` |
 | Smart sleep | Grace period after the last agent exits: immediately / 5 / 15 / 30 min / never (default 5 min) |
+| Active sleep (opt-in) | On battery, actively sleeps the Mac (`pmset sleepnow`) once the last agent exits and the grace period runs out — never while an agent is running |
 | Battery | IOKit power-source snapshot; configurable cutoff (default 20 %), optional require-charger, hard floor at 10 % |
 | Failsafe | Never stays awake longer than a configurable limit (default 12 h), even if a process wedges |
 | Notifications | `UserNotifications`: agent finished, agent disappeared, battery threshold, mode stopped, sleep restored, crash recovery |

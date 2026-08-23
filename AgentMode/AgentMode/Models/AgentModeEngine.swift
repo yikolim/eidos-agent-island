@@ -196,6 +196,7 @@ final class AgentModeEngine {
             } else if settings.gracePeriod == .immediate {
                 releaseAwake(notifyStop: true)
                 state = .idle
+                triggerActiveSleepIfEnabled()
             } else {
                 state = .grace(until: Date().addingTimeInterval(TimeInterval(settings.gracePeriod.rawValue)))
             }
@@ -203,10 +204,48 @@ final class AgentModeEngine {
             if Date() >= until {
                 releaseAwake(notifyStop: true)
                 state = .idle
+                triggerActiveSleepIfEnabled()
             }
         default:
             releaseAwake(notifyStop: false)
             state = .idle
+        }
+    }
+
+    // MARK: - Active sleep
+
+    /// The "battery saver" behavior: when the last agent finishes and the
+    /// grace period has run, actively put the Mac to sleep — but only on
+    /// battery power, and never while any monitored agent is running.
+    private func triggerActiveSleepIfEnabled() {
+        guard settings.activeSleepWhenIdle, agents.isEmpty, !power.onACPower else { return }
+        Notifier.shared.post(.sleepingNow)
+        // Small delay so the notification lands before the machine sleeps;
+        // re-check on fire in case an agent started in the meantime.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+            guard let self, self.settings.activeSleepWhenIdle, self.agents.isEmpty,
+                  !self.isHoldingAwake else { return }
+            Self.sleepNow()
+        }
+    }
+
+    /// `pmset sleepnow` needs no privileges (unlike pmset settings changes).
+    /// Falls back to a System Events AppleScript if pmset fails.
+    private static func sleepNow() {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/pmset")
+        task.arguments = ["sleepnow"]
+        do {
+            try task.run()
+            task.waitUntilExit()
+            if task.terminationStatus == 0 { return }
+        } catch {
+            NSLog("AgentMode: pmset sleepnow failed: \(error)")
+        }
+        if let script = NSAppleScript(source: "tell application \"System Events\" to sleep") {
+            var error: NSDictionary?
+            script.executeAndReturnError(&error)
+            if let error { NSLog("AgentMode: sleep fallback failed: \(error)") }
         }
     }
 
