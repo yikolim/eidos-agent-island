@@ -13,7 +13,6 @@ final class Notifier {
 
     enum Event {
         case agentFinished(name: String, runtime: String)
-        case agentDisappeared(name: String)
         case batteryThreshold(percent: Int)
         case agentModeStopped
         case sleepRestored
@@ -23,7 +22,6 @@ final class Notifier {
         var title: String {
             switch self {
             case .agentFinished:    return "Agent finished"
-            case .agentDisappeared: return "Agent stopped unexpectedly"
             case .batteryThreshold: return "Battery threshold reached"
             case .agentModeStopped: return "Agent Mode stopped"
             case .sleepRestored:    return "Normal sleep restored"
@@ -36,8 +34,6 @@ final class Notifier {
             switch self {
             case .agentFinished(let name, let runtime):
                 return "\(name) completed after \(runtime)."
-            case .agentDisappeared(let name):
-                return "\(name) exited or crashed while other agents are still running."
             case .batteryThreshold(let percent):
                 return "Battery is at \(percent)%. Agent Mode released its keep-awake to protect the battery."
             case .agentModeStopped:

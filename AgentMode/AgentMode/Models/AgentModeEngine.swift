@@ -156,7 +156,7 @@ final class AgentModeEngine {
     private func apply(scanned: [AgentProcess], snapshot: PowerSnapshot) {
         power = snapshot
         let scanned = annotate(scanned)
-        diffAgents(old: agents, new: scanned)
+        diffGroups(old: agents, new: scanned)
         agents = scanned
         evaluate()
         // Screen keep-awake tracks both the setting and whether we're holding
@@ -168,16 +168,42 @@ final class AgentModeEngine {
         isKeepingDisplayAwake = assertion.isDisplayActive
     }
 
-    private func diffAgents(old: [AgentProcess], new: [AgentProcess]) {
-        let newPids = Set(new.map(\.pid))
-        for gone in old where !newPids.contains(gone.pid) {
-            if new.isEmpty {
-                Notifier.shared.post(.agentFinished(name: gone.displayName, runtime: gone.runtimeText))
-            } else {
-                // Others still running — flag it, since we can't read the exit
-                // status of a non-child process (section 12: crashed/disappeared).
-                Notifier.shared.post(.agentDisappeared(name: gone.displayName))
-            }
+    /// How long a group must exist before its disappearance is worth a
+    /// notification — filters the constant churn of short-lived helper
+    /// processes that agents spawn (which used to fire a notification each).
+    static let minRuntimeForNotification: TimeInterval = 60
+    /// At most one "finished" notification per agent per this interval.
+    static let notificationCooldown: TimeInterval = 120
+
+    private var groupFirstSeen: [String: Date] = [:]
+    private var lastFinishedNote: [String: Date] = [:]
+
+    /// Notify at the whole-agent level only: a notification fires when ALL of
+    /// an agent's processes are gone, and only if the agent had been around
+    /// long enough to be a real run. Individual helper processes coming and
+    /// going (constant with Codex/Claude Code) stay silent.
+    private func diffGroups(old: [AgentProcess], new: [AgentProcess]) {
+        let now = Date()
+        let oldNames = Set(old.map(\.displayName))
+        let newNames = Set(new.map(\.displayName))
+
+        for name in newNames where groupFirstSeen[name] == nil {
+            groupFirstSeen[name] = now
+        }
+
+        for name in oldNames.subtracting(newNames) {
+            let firstSeen = groupFirstSeen.removeValue(forKey: name)
+            guard let firstSeen,
+                  now.timeIntervalSince(firstSeen) >= Self.minRuntimeForNotification else { continue }
+            if let last = lastFinishedNote[name],
+               now.timeIntervalSince(last) < Self.notificationCooldown { continue }
+            lastFinishedNote[name] = now
+            let started = old.filter { $0.displayName == name }
+                .compactMap(\.startedAt).min() ?? firstSeen
+            Notifier.shared.post(.agentFinished(
+                name: name,
+                runtime: AgentProcess.durationText(since: started)
+            ))
         }
     }
 
@@ -319,9 +345,9 @@ final class AgentModeEngine {
         assertion.release()
         isHoldingAwake = false
         activeSince = nil
+        // One notification, not two — its body already says sleep is back.
         if wasActive, notifyStop {
             Notifier.shared.post(.agentModeStopped)
-            Notifier.shared.post(.sleepRestored)
         }
     }
 
