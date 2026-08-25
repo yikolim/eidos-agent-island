@@ -14,7 +14,7 @@ struct MenuView: View {
                 Circle()
                     .fill(headerColor)
                     .frame(width: 8, height: 8)
-                Text("Agent Mode: \(settings.agentModeEnabled ? "ON" : "OFF")")
+                Text("Noesis · Agent Mode \(settings.agentModeEnabled ? "ON" : "OFF")")
                     .font(.system(size: 13, weight: .semibold))
                 Spacer()
                 Toggle("", isOn: $settings.agentModeEnabled)

@@ -1,27 +1,27 @@
 #!/usr/bin/env bash
 #
-# build.sh — Compile AgentMode.app directly with swiftc (no full Xcode needed).
+# build.sh — Compile Noesis.app directly with swiftc (no full Xcode needed).
 #
-# Mirrors the root Eidos build.sh: compiles every Swift file under
-# AgentMode/ into one executable and wraps a minimal .app bundle around it.
+# Compiles every Swift file under AgentMode/ into one executable and wraps a
+# minimal .app bundle around it.
 #
 # Usage:
 #   ./build.sh           # build only
-#   ./build.sh --run     # build then launch AgentMode.app
+#   ./build.sh --run     # build then launch Noesis.app
 #
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-APP="$ROOT/build/AgentMode.app"
+APP="$ROOT/build/Noesis.app"
 MACOS_DIR="$APP/Contents/MacOS"
-BIN="$MACOS_DIR/AgentMode"
+BIN="$MACOS_DIR/Noesis"
 
 echo "==> Collecting Swift sources"
 SOURCES=()
 while IFS= read -r f; do SOURCES+=("$f"); done < <(find "$ROOT/AgentMode" -name '*.swift' | sort)
 printf '    %s\n' "${SOURCES[@]#$ROOT/}"
 
-echo "==> Preparing bundle at build/AgentMode.app"
+echo "==> Preparing bundle at build/Noesis.app"
 rm -rf "$APP"
 mkdir -p "$MACOS_DIR"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
@@ -31,13 +31,13 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleName</key><string>AgentMode</string>
-	<key>CFBundleDisplayName</key><string>Agent Mode</string>
-	<key>CFBundleIdentifier</key><string>com.agentmode.app</string>
-	<key>CFBundleExecutable</key><string>AgentMode</string>
+	<key>CFBundleName</key><string>Noesis</string>
+	<key>CFBundleDisplayName</key><string>Noesis</string>
+	<key>CFBundleIdentifier</key><string>com.noesis.app</string>
+	<key>CFBundleExecutable</key><string>Noesis</string>
 	<key>CFBundlePackageType</key><string>APPL</string>
 	<key>CFBundleVersion</key><string>1</string>
-	<key>CFBundleShortVersionString</key><string>0.1.0</string>
+	<key>CFBundleShortVersionString</key><string>0.2.0</string>
 	<key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
 	<key>LSMinimumSystemVersion</key><string>14.0</string>
 	<key>LSUIElement</key><true/>
@@ -65,7 +65,7 @@ echo "==> Built: $APP"
 
 if [[ "${1:-}" == "--run" ]]; then
   echo "==> Launching"
-  pkill -x AgentMode 2>/dev/null || true
+  pkill -x Noesis 2>/dev/null || true
   sleep 0.3
   open "$APP"
 fi

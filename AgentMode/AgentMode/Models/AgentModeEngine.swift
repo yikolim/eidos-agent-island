@@ -163,7 +163,7 @@ final class AgentModeEngine {
         // the system awake for agents; released the moment either stops.
         assertion.setDisplayKeepAwake(
             assertion.isActive && settings.keepDisplayAwake,
-            reason: "Agent Mode: keep screen on while agents work"
+            reason: "Noesis: keep screen on while agents work"
         )
         isKeepingDisplayAwake = assertion.isDisplayActive
     }
@@ -334,7 +334,7 @@ final class AgentModeEngine {
            percent <= AppSettings.criticalBatteryPercent {
             return false
         }
-        assertion.engage(reason: "Agent Mode: AI agents are working")
+        assertion.engage(reason: "Noesis: AI agents are working")
         isHoldingAwake = assertion.isActive
         activeSince = assertion.isActive ? Date() : nil
         return assertion.isActive

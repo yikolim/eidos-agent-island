@@ -1,6 +1,6 @@
-name: AgentMode
+name: Noesis
 options:
-  bundleIdPrefix: com.agentmode
+  bundleIdPrefix: com.noesis
   deploymentTarget:
     macOS: "14.0"
   xcodeVersion: "15"
@@ -8,13 +8,13 @@ options:
 
 settings:
   base:
-    PRODUCT_NAME: AgentMode
+    PRODUCT_NAME: Noesis
     SWIFT_VERSION: "5.9"
     MACOSX_DEPLOYMENT_TARGET: "14.0"
     ENABLE_HARDENED_RUNTIME: YES
 
 targets:
-  AgentMode:
+  Noesis:
     type: application
     platform: macOS
     sources:
@@ -24,17 +24,17 @@ targets:
     info:
       path: AgentMode/Info.plist
       properties:
-        CFBundleName: AgentMode
-        CFBundleDisplayName: Agent Mode
-        CFBundleIdentifier: com.agentmode.app
+        CFBundleName: Noesis
+        CFBundleDisplayName: Noesis
+        CFBundleIdentifier: com.noesis.app
         CFBundleVersion: "1"
-        CFBundleShortVersionString: "0.1.0"
+        CFBundleShortVersionString: "0.2.0"
         LSUIElement: true
         NSPrincipalClass: NSApplication
         CFBundleIconFile: ""
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.agentmode.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.noesis.app
         INFOPLIST_FILE: AgentMode/Info.plist
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: ""
