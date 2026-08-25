@@ -54,6 +54,23 @@ final class AgentModeEngine {
     private var failsafeTripped = false
 
     static let pollInterval: TimeInterval = 3
+    /// A process using at least this much CPU counts as "working".
+    static let workingCPUThreshold = 2.0
+    /// Below the threshold for this long → idle (waiting / possibly unfinished).
+    static let idleAfter: TimeInterval = 180
+
+    /// Per-pid last time meaningful CPU was observed.
+    private var lastActive: [pid_t: Date] = [:]
+
+    /// Agents folded to one entry per name, working groups first.
+    var groups: [AgentGroup] {
+        Dictionary(grouping: agents, by: \.displayName)
+            .map { AgentGroup(name: $0.key, processes: $0.value) }
+            .sorted {
+                if $0.isWorking != $1.isWorking { return $0.isWorking }
+                return $0.name < $1.name
+            }
+    }
 
     func start() {
         Notifier.shared.requestAuthorization()
@@ -116,8 +133,29 @@ final class AgentModeEngine {
         }
     }
 
+    /// Stamps each process with its activity state. A process is "working"
+    /// while it has used meaningful CPU within the idle window; first sight
+    /// counts as active so new agents don't start out flagged as stalled.
+    private func annotate(_ scanned: [AgentProcess]) -> [AgentProcess] {
+        let now = Date()
+        var result = scanned
+        for i in result.indices {
+            let pid = result[i].pid
+            if result[i].cpuPercent >= Self.workingCPUThreshold || lastActive[pid] == nil {
+                lastActive[pid] = now
+            }
+            let last = lastActive[pid] ?? now
+            result[i].lastActiveAt = last
+            result[i].isWorking = now.timeIntervalSince(last) < Self.idleAfter
+        }
+        let pids = Set(result.map(\.pid))
+        lastActive = lastActive.filter { pids.contains($0.key) }
+        return result
+    }
+
     private func apply(scanned: [AgentProcess], snapshot: PowerSnapshot) {
         power = snapshot
+        let scanned = annotate(scanned)
         diffAgents(old: agents, new: scanned)
         agents = scanned
         evaluate()

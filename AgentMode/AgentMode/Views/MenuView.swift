@@ -34,7 +34,10 @@ struct MenuView: View {
 
             Divider()
 
-            // Agents
+            // Agents, grouped per app and split by activity
+            let working = engine.groups.filter(\.isWorking)
+            let idle = engine.groups.filter { !$0.isWorking }
+
             if engine.agents.isEmpty {
                 Text("No agents detected")
                     .font(.system(size: 12))
@@ -43,8 +46,18 @@ struct MenuView: View {
                     .padding(.vertical, 10)
             } else {
                 VStack(alignment: .leading, spacing: 6) {
-                    ForEach(engine.agents) { agent in
-                        agentRow(agent)
+                    if !working.isEmpty {
+                        sectionHeader("RUNNING NOW", color: .green)
+                        ForEach(working) { group in
+                            groupRow(group)
+                        }
+                    }
+                    if !idle.isEmpty {
+                        sectionHeader("IDLE — POSSIBLY UNFINISHED", color: .orange)
+                            .padding(.top, working.isEmpty ? 0 : 6)
+                        ForEach(idle) { group in
+                            groupRow(group)
+                        }
                     }
                 }
                 .padding(.horizontal, 14)
@@ -140,20 +153,43 @@ struct MenuView: View {
         return .secondary.opacity(0.5)
     }
 
-    private func agentRow(_ agent: AgentProcess) -> some View {
+    private func sectionHeader(_ title: String, color: Color) -> some View {
+        HStack(spacing: 5) {
+            Circle().fill(color).frame(width: 6, height: 6)
+            Text(title)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .tracking(0.6)
+        }
+    }
+
+    private func groupRow(_ group: AgentGroup) -> some View {
         HStack(spacing: 8) {
             Image(systemName: "cpu")
                 .font(.system(size: 11))
-                .foregroundStyle(.green)
+                .foregroundStyle(group.isWorking ? .green : .orange)
             VStack(alignment: .leading, spacing: 1) {
-                Text("\(agent.displayName) — Running — \(agent.runtimeText)")
+                Text(groupTitle(group))
                     .font(.system(size: 12))
-                Text("pid \(agent.pid) · \(Int(agent.cpuPercent))% CPU · \(agent.memoryText)")
+                Text(groupDetail(group))
                     .font(.system(size: 10.5))
                     .foregroundStyle(.secondary)
             }
             Spacer()
         }
+    }
+
+    private func groupTitle(_ group: AgentGroup) -> String {
+        let status = group.isWorking
+            ? "Running — \(group.runtimeText)"
+            : "Idle for \(group.idleForText)"
+        return "\(group.name) — \(status)"
+    }
+
+    private func groupDetail(_ group: AgentGroup) -> String {
+        let count = group.processes.count
+        let procs = count == 1 ? "1 process" : "\(count) processes"
+        return "\(procs) · \(Int(group.totalCPU))% CPU · \(group.memoryText)"
     }
 
     private func statusLine(label: String, value: String) -> some View {
