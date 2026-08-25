@@ -20,6 +20,10 @@ struct SettingsView: View {
                         Text(t.label).tag(t)
                     }
                 }
+                Toggle("Keep the screen on while agents run", isOn: $settings.keepDisplayAwake)
+                Text("By default only system sleep is prevented — the display may still turn off. This also keeps the screen awake, only while agents are detected.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Battery protection") {

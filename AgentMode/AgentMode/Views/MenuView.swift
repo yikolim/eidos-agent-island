@@ -75,6 +75,9 @@ struct MenuView: View {
                 Toggle("Sleep when agents finish (on battery)", isOn: $settings.activeSleepWhenIdle)
                     .font(.system(size: 12))
 
+                Toggle("Keep screen on while agents run", isOn: $settings.keepDisplayAwake)
+                    .font(.system(size: 12))
+
                 Toggle("Lid-closed mode (admin)", isOn: Binding(
                     get: { engine.lidClosedModeEnabled },
                     set: { engine.setLidClosedMode($0) }

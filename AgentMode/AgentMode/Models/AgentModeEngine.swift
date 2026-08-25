@@ -37,6 +37,8 @@ final class AgentModeEngine {
     private(set) var lidClosedModeEnabled = false
     /// Mirrors assertion.isActive as a tracked property so SwiftUI observes it.
     private(set) var isHoldingAwake = false
+    /// Mirrors the display assertion for the UI.
+    private(set) var isKeepingDisplayAwake = false
     var lastError: String?
 
     private let settings = AppSettings.shared
@@ -72,6 +74,7 @@ final class AgentModeEngine {
         timer = nil
         assertion.release()
         isHoldingAwake = false
+        isKeepingDisplayAwake = false
         if lidClosedModeEnabled {
             lidController.disable()
             lidClosedModeEnabled = false
@@ -118,6 +121,13 @@ final class AgentModeEngine {
         diffAgents(old: agents, new: scanned)
         agents = scanned
         evaluate()
+        // Screen keep-awake tracks both the setting and whether we're holding
+        // the system awake for agents; released the moment either stops.
+        assertion.setDisplayKeepAwake(
+            assertion.isActive && settings.keepDisplayAwake,
+            reason: "Agent Mode: keep screen on while agents work"
+        )
+        isKeepingDisplayAwake = assertion.isDisplayActive
     }
 
     private func diffAgents(old: [AgentProcess], new: [AgentProcess]) {
@@ -287,9 +297,10 @@ final class AgentModeEngine {
             return "Restoring in \(remaining / 60)m \(remaining % 60)s"
         }
         if isHoldingAwake {
-            return lidClosedModeEnabled
-                ? "Disabled while agents are active (lid-closed OK)"
-                : "Disabled while agents are active"
+            var text = "Disabled while agents are active"
+            if isKeepingDisplayAwake { text += " (screen on)" }
+            if lidClosedModeEnabled { text += " (lid-closed OK)" }
+            return text
         }
         return "Normal"
     }

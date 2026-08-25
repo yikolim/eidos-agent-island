@@ -13,7 +13,9 @@ import IOKit.pwr_mgt
 /// stuck awake (section 8).
 final class SleepAssertion {
     private var assertionID: IOPMAssertionID = 0
+    private var displayAssertionID: IOPMAssertionID = 0
     private(set) var isActive = false
+    private(set) var isDisplayActive = false
 
     func engage(reason: String) {
         guard !isActive else { return }
@@ -29,7 +31,28 @@ final class SleepAssertion {
         }
     }
 
+    /// Separately holds the screen on (PreventUserIdleDisplaySleep). Called
+    /// every tick with the desired state, so it tracks both the setting and
+    /// whether agents are running. Also process-scoped: kernel-released if
+    /// the app dies.
+    func setDisplayKeepAwake(_ on: Bool, reason: String) {
+        if on, !isDisplayActive {
+            let result = IOPMAssertionCreateWithName(
+                kIOPMAssertionTypePreventUserIdleDisplaySleep as CFString,
+                IOPMAssertionLevel(kIOPMAssertionLevelOn),
+                reason as CFString,
+                &displayAssertionID
+            )
+            isDisplayActive = (result == kIOReturnSuccess)
+        } else if !on, isDisplayActive {
+            IOPMAssertionRelease(displayAssertionID)
+            displayAssertionID = 0
+            isDisplayActive = false
+        }
+    }
+
     func release() {
+        setDisplayKeepAwake(false, reason: "")
         guard isActive else { return }
         IOPMAssertionRelease(assertionID)
         assertionID = 0

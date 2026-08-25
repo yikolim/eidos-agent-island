@@ -62,6 +62,9 @@ final class AppSettings {
     /// grace period expires) while on battery power. Never fires while any
     /// monitored agent is still running.
     var activeSleepWhenIdle: Bool { didSet { save() } }
+    /// Also keep the display from sleeping while agents are running (the
+    /// default assertion only prevents system sleep — the screen may dim/off).
+    var keepDisplayAwake: Bool { didSet { save() } }
     /// Extra process-name substrings (lowercased match) the user wants monitored.
     var customProcessNames: [String] { didSet { save() } }
     var notificationsEnabled: Bool { didSet { save() } }
@@ -81,6 +84,7 @@ final class AppSettings {
         var requireCharger: Bool
         // Optional so snapshots saved by older builds still decode.
         var activeSleepWhenIdle: Bool?
+        var keepDisplayAwake: Bool?
         var customProcessNames: [String]
         var notificationsEnabled: Bool
         var launchAtLogin: Bool
@@ -96,6 +100,7 @@ final class AppSettings {
             batteryCutoffPercent = s.batteryCutoffPercent
             requireCharger = s.requireCharger
             activeSleepWhenIdle = s.activeSleepWhenIdle ?? false
+            keepDisplayAwake = s.keepDisplayAwake ?? false
             customProcessNames = s.customProcessNames
             notificationsEnabled = s.notificationsEnabled
             launchAtLogin = s.launchAtLogin
@@ -107,6 +112,7 @@ final class AppSettings {
             batteryCutoffPercent = 20
             requireCharger = false
             activeSleepWhenIdle = false
+            keepDisplayAwake = false
             customProcessNames = []
             notificationsEnabled = true
             launchAtLogin = false
@@ -122,6 +128,7 @@ final class AppSettings {
             batteryCutoffPercent: batteryCutoffPercent,
             requireCharger: requireCharger,
             activeSleepWhenIdle: activeSleepWhenIdle,
+            keepDisplayAwake: keepDisplayAwake,
             customProcessNames: customProcessNames,
             notificationsEnabled: notificationsEnabled,
             launchAtLogin: launchAtLogin
